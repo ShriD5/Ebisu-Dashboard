@@ -5,27 +5,24 @@ import { useState, Fragment } from 'react'
 import Link from 'next/link'
 
 // ** MUI Components
+import Select from '@mui/material/Select'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import InputLabel from '@mui/material/InputLabel'
-import IconButton from '@mui/material/IconButton'
 import CardContent from '@mui/material/CardContent'
 import FormControl from '@mui/material/FormControl'
 import OutlinedInput from '@mui/material/OutlinedInput'
 import { styled, useTheme } from '@mui/material/styles'
 import MuiCard from '@mui/material/Card'
-import InputAdornment from '@mui/material/InputAdornment'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
+import MenuItem from '@mui/material/MenuItem'
+import { useRouter } from 'next/router'
 
 // ** Icons Imports
-import Google from 'mdi-material-ui/Google'
-import Github from 'mdi-material-ui/Github'
-import Twitter from 'mdi-material-ui/Twitter'
-import Facebook from 'mdi-material-ui/Facebook'
+
 import EyeOutline from 'mdi-material-ui/EyeOutline'
 import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 
@@ -37,6 +34,8 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Demo Imports
 import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration'
+import { createUser } from 'src/@core/utils/axios.utils'
+import { route } from 'next/dist/server/router'
 
 // ** Styled Components
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -58,26 +57,36 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
   }
 }))
 
+const defaultFormFields = {
+  name: '',
+  email: '',
+  mobile: '',
+  password: '',
+  role: ''
+}
+
 const RegisterPage = () => {
   // ** States
-  const [values, setValues] = useState({
-    password: '',
-    showPassword: false
-  })
+  const router = useRouter()
+
+  const [formFields, setFormFields] = useState(defaultFormFields)
+  const { name, email, mobile, password, role } = formFields
+
+  const handleSubmit = async event => {
+    event.preventDefault()
+
+    await createUser({ name, email, mobile, password, role })
+    router.push('/login')
+  }
 
   // ** Hook
   const theme = useTheme()
 
-  const handleChange = prop => event => {
-    setValues({ ...values, [prop]: event.target.value })
-  }
+  const handleChange = event => {
+    const { name, value } = event.target
+    console.log({ name, value })
 
-  const handleClickShowPassword = () => {
-    setValues({ ...values, showPassword: !values.showPassword })
-  }
-
-  const handleMouseDownPassword = event => {
-    event.preventDefault()
+    setFormFields({ ...formFields, [name]: value })
   }
 
   return (
@@ -159,35 +168,69 @@ const RegisterPage = () => {
           </Box>
           <Box sx={{ mb: 6 }}>
             <Typography variant='h5' sx={{ fontWeight: 600, marginBottom: 1.5 }}>
-              Adventure starts here 🚀
+              Register
             </Typography>
-            <Typography variant='body2'>Make your app management easy and fun!</Typography>
+            <Typography variant='body2'>Register Now to Access the Dashboard</Typography>
           </Box>
-          <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()}>
-            <TextField autoFocus fullWidth id='username' label='Username' sx={{ marginBottom: 4 }} />
-            <TextField fullWidth type='email' label='Email' sx={{ marginBottom: 4 }} />
+          <form noValidate autoComplete='off' onSubmit={handleSubmit}>
+            <TextField
+              name='name'
+              onChange={handleChange}
+              autoFocus
+              fullWidth
+              value={name}
+              id='username'
+              label='Username'
+              sx={{ marginBottom: 4 }}
+            />
+            <TextField
+              name='email'
+              onChange={handleChange}
+              value={email}
+              fullWidth
+              type='email'
+              label='Email'
+              sx={{ marginBottom: 4 }}
+            />
+            <TextField
+              name='mobile'
+              onChange={handleChange}
+              autoFocus
+              fullWidth
+              value={mobile}
+              id='phone'
+              label='Phone Number'
+              type={'tel'}
+              sx={{ marginBottom: 4 }}
+            />
+
             <FormControl fullWidth>
               <InputLabel htmlFor='auth-register-password'>Password</InputLabel>
               <OutlinedInput
+                name='password'
                 label='Password'
-                value={values.password}
+                value={password}
                 id='auth-register-password'
-                onChange={handleChange('password')}
-                type={values.showPassword ? 'text' : 'password'}
-                endAdornment={
-                  <InputAdornment position='end'>
-                    <IconButton
-                      edge='end'
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      aria-label='toggle password visibility'
-                    >
-                      {values.showPassword ? <EyeOutline fontSize='small' /> : <EyeOffOutline fontSize='small' />}
-                    </IconButton>
-                  </InputAdornment>
-                }
+                type={'password'}
+                onChange={handleChange}
               />
             </FormControl>
+
+            <FormControl fullWidth sx={{ mt: 4 }}>
+              <InputLabel id='demo-simple-select-label'>Role</InputLabel>
+              <Select
+                labelId='demo-simple-select-label'
+                id='demo-simple-select'
+                value={role}
+                label='Age'
+                onChange={handleChange}
+                name={'role'}
+              >
+                <MenuItem value={'user'}>User</MenuItem>
+                <MenuItem value={'admin'}>Admin</MenuItem>
+              </Select>
+            </FormControl>
+
             <FormControlLabel
               control={<Checkbox />}
               label={
@@ -207,35 +250,10 @@ const RegisterPage = () => {
                 Already have an account?
               </Typography>
               <Typography variant='body2'>
-                <Link passHref href='/pages/login'>
+                <Link passHref href='/login'>
                   <LinkStyled>Sign in instead</LinkStyled>
                 </Link>
               </Typography>
-            </Box>
-            <Divider sx={{ my: 5 }}>or</Divider>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Link href='/' passHref>
-                <IconButton component='a' onClick={e => e.preventDefault()}>
-                  <Facebook sx={{ color: '#497ce2' }} />
-                </IconButton>
-              </Link>
-              <Link href='/' passHref>
-                <IconButton component='a' onClick={e => e.preventDefault()}>
-                  <Twitter sx={{ color: '#1da1f2' }} />
-                </IconButton>
-              </Link>
-              <Link href='/' passHref>
-                <IconButton component='a' onClick={e => e.preventDefault()}>
-                  <Github
-                    sx={{ color: theme => (theme.palette.mode === 'light' ? '#272727' : theme.palette.grey[300]) }}
-                  />
-                </IconButton>
-              </Link>
-              <Link href='/' passHref>
-                <IconButton component='a' onClick={e => e.preventDefault()}>
-                  <Google sx={{ color: '#db4437' }} />
-                </IconButton>
-              </Link>
             </Box>
           </form>
         </CardContent>
